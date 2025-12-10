@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
-using System.Linq; // Used for convenient List operations
+using System.Linq; 
 
 public class MatchDetector : MonoBehaviour
 {
@@ -15,10 +15,9 @@ public class MatchDetector : MonoBehaviour
 
     /// <summary>
     /// Finds primary match centered on this gem and enqueues it. 
-    /// Then recursively checks for orthogonal secondary matches 
-    /// for every gem involved in the primary match.
+    /// Then recursively check for orthogonal secondary matches 
     /// </summary>
-    /// 
+    
     public List<Gem> GetMatches()
     {
         if (gem == null || grid == null || !gem.canMatch || gem.dragging)

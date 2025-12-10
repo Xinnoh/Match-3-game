@@ -6,8 +6,9 @@ public class GridSystem : MonoBehaviour
     [SerializeField] int width = 8;
     [SerializeField] int height = 8;
     [SerializeField] float cellSize = 1f;
-    [SerializeField] Gem gemPrefab;
-    [SerializeField] List<GemSO> gemTypes;
+    public Gem gemPrefab;
+    public List<GemSO> gemTypes;
+    public int bufferRows = 4;
 
     [SerializeField] Transform gridAnchor;   // grid starting point
     
@@ -34,7 +35,7 @@ public class GridSystem : MonoBehaviour
     {
         LoadGridBoxes();
 
-        grid = new Gem[width, height];
+        grid = new Gem[width, height + bufferRows];
         CalculateOrigin();
         Generate();
     }
@@ -47,17 +48,19 @@ public class GridSystem : MonoBehaviour
         }
     }
 
+
+    // Where to place the grid
     void CalculateOrigin()
     {
         float totalW = (width - 1) * cellSize;
-        float totalH = (height - 1) * cellSize;
+        float totalH = (height - 1 + bufferRows) * cellSize;
 
         origin = gridAnchor.position - new Vector3(totalW / 2f, totalH / 2f, 0f);
     }
 
     void LoadGridBoxes()
     {
-        boxes = new GridBox[width, height];
+        boxes = new GridBox[width, height + bufferRows];
 
         foreach (Transform t in boxRoot)
         {
@@ -70,9 +73,12 @@ public class GridSystem : MonoBehaviour
     void Generate()
     {
         for (int x = 0; x < width; x++)
-            for (int y = 0; y < height; y++)
+            for (int y = 0; y < height + bufferRows; y++)
                 SpawnRandom(x, y);
     }
+
+    // Place random gems on grid
+    // Also makes sure there's no matches
     void SpawnRandom(int x, int y)
     {
         Gem gem = null;
@@ -147,7 +153,6 @@ public class GridSystem : MonoBehaviour
 
     public bool IsDragging(Gem g) => dragging == g;
 
-
     public void EndDrag()
     {
         if (dragging == null) return;
@@ -164,7 +169,7 @@ public class GridSystem : MonoBehaviour
         {
             Gem targetLocation = grid[tx, ty];
             
-            // Do not swap if target is currently matching
+            // Do not swap if target is currently matching, or should not match
             if (targetLocation == null || !targetLocation.isMatched)
             {
                 SwapToBox(dragging, tx, ty);
@@ -231,33 +236,15 @@ public class GridSystem : MonoBehaviour
     }
 
 
-    void Swap(Gem a, Gem b)
-    {
-        int ax = a.x, ay = a.y;
-        int bx = b.x, by = b.y;
-
-        grid[ax, ay] = b;
-        grid[bx, by] = a;
-
-        a.x = bx; a.y = by;
-        b.x = ax; b.y = ay;
-
-        a.transform.position = boxes[bx, by].transform.position;
-        b.transform.position = boxes[ax, ay].transform.position;
-
-        boxes[ax, ay].SetGem(b);
-        boxes[bx, by].SetGem(a);
-    }
-
     public Gem GetGemAt(int x, int y)
     {
-        if (x < 0 || y < 0 || x >= width || y >= height) return null;
+        if (x < 0 || y < 0 || x >= width || y >= height + bufferRows) return null;
         return grid[x, y];
     }
 
     public bool InBounds(int x, int y)
     {
-        return x >= 0 && y >= 0 && x < width && y < height;
+        return x >= 0 && y >= 0 && x < width && y < height + bufferRows;
     }
 
 
@@ -285,7 +272,6 @@ public class GridSystem : MonoBehaviour
 
     public void RegenerateGrid()
     {
-        // Destroy existing gems
         for (int x = 0; x < Width; x++)
         {
             for (int y = 0; y < Height; y++)
@@ -295,10 +281,8 @@ public class GridSystem : MonoBehaviour
             }
         }
 
-        // Clear the array
         grid = new Gem[Width, Height];
 
-        // Generate new gems
         Generate();
     }
 

@@ -3,103 +3,118 @@ using UnityEngine;
 
 public class GemMatchEffect : MonoBehaviour
 {
-    [SerializeField] Transform childToAnimate;    // the child object to scale
+    [SerializeField] Transform childToAnimate;
     [HideInInspector] public Transform sprite;
-    [SerializeField] AnimationCurve growCurve;
-    [SerializeField] AnimationCurve shrinkCurve;
+
+    [SerializeField] AnimationCurve ringCurve;
     [SerializeField] float ringDuration = 0.3f;
+    [SerializeField] float maxRingScale = 1.5f;
+
+    [SerializeField] float pulsePeak = 1.3f;
+    [SerializeField] float pulseUpTime = 0.2f;
+    [SerializeField] float pulseDownTime = 0.3f;
+
+    [SerializeField] AnimationCurve shrinkCurve;
     [SerializeField] float shrinkDelay = 0.2f;
     [SerializeField] float shrinkDuration = 0.3f;
-    [SerializeField] float maxChildScale = 1.5f;
 
-
-    [SerializeField] float flashPeakSize = 1.3f;
-    [SerializeField] float flashUpTime = 0.2f;
-    [SerializeField] float flashDownTime = 0.3f;
-
-    SpriteRenderer childRenderer;
+    SpriteRenderer ringRenderer;
 
     void Awake()
     {
         if (childToAnimate != null)
-            childRenderer = childToAnimate.GetComponent<SpriteRenderer>();
+            ringRenderer = childToAnimate.GetComponent<SpriteRenderer>();
     }
 
     public void PlayMatchEffect(bool isSpecial)
     {
-        if (childToAnimate != null)
-        {
-            if (childRenderer != null)
-                childRenderer.enabled = true;
 
-            StartCoroutine(InitialMatchEffect());
-        }
+        StartCoroutine(RingEffect());
+        StartCoroutine(PulseEffect());
 
         if (!isSpecial)
-        {
-            StartCoroutine(ShrinkAndDestroy());
-
-        }
-
+            StartCoroutine(ShrinkDisappear());
     }
 
-    IEnumerator InitialMatchEffect()
+
+    //----------------------------
+    //  EFFECT 1
+    //----------------------------
+    IEnumerator RingEffect()
     {
-        float time = 0f;
-        Vector3 ringStart = childToAnimate.localScale;
+        if (ringRenderer != null)
+            ringRenderer.enabled = true;
 
-        // sprite flash params
-        Vector3 spriteStart = sprite.localScale;
+        float t = 0f;
+        Vector3 startScale = Vector3.one;
 
-        while (time < ringDuration)
+        while (t < ringDuration)
         {
-            time += Time.deltaTime;
-            float t = time / ringDuration;
+            t += Time.deltaTime;
+            float k = t / ringDuration;
 
-            // ring scale
-            float rs = growCurve.Evaluate(t) * maxChildScale;
-            childToAnimate.localScale = ringStart * rs;
-
-            // sprite flash up
-            if (time <= flashUpTime)
-            {
-                float ft = time / flashUpTime;
-                sprite.localScale = Vector3.Lerp(spriteStart, spriteStart * flashPeakSize, ft);
-            }
-            // sprite flash down
-            else if (time <= flashUpTime + flashDownTime)
-            {
-                float ft = (time - flashUpTime) / flashDownTime;
-                sprite.localScale = Vector3.Lerp(spriteStart * flashPeakSize, spriteStart, ft);
-            }
+            float ringScale = ringCurve.Evaluate(k) * maxRingScale;
+            childToAnimate.localScale = startScale * ringScale;
 
             yield return null;
         }
 
-        childToAnimate.localScale = ringStart * (growCurve.Evaluate(1f) * maxChildScale);
-        sprite.localScale = spriteStart;
+        childToAnimate.localScale = startScale * (ringCurve.Evaluate(1f) * maxRingScale);
     }
 
 
+    //----------------------------
+    //  EFFECT 2
+    //----------------------------
+    IEnumerator PulseEffect()
+    {
+        float t = 0f;
+        Vector3 start = Vector3.one;
 
-    IEnumerator ShrinkAndDestroy()
+        // pulse up
+        while (t < pulseUpTime)
+        {
+            t += Time.deltaTime;
+            float k = t / pulseUpTime;
+            sprite.localScale = Vector3.Lerp(start, start * pulsePeak, k);
+            yield return null;
+        }
+
+        // pulse down
+        t = 0f;
+        while (t < pulseDownTime)
+        {
+            t += Time.deltaTime;
+            float k = t / pulseDownTime;
+            sprite.localScale = Vector3.Lerp(start * pulsePeak, start, k);
+            yield return null;
+        }
+
+        sprite.localScale = start;
+    }
+
+
+    //----------------------------
+    //  EFFECT 3
+    //----------------------------
+    IEnumerator ShrinkDisappear()
     {
         yield return new WaitForSeconds(shrinkDelay);
 
-        float time = 0f;
-        Vector3 initialScale = sprite.localScale;
+        float t = 0f;
+        Vector3 start = sprite.localScale;
 
-        while (time < shrinkDuration)
+        while (t < shrinkDuration)
         {
-            time += Time.deltaTime;
-            float t = time / shrinkDuration;
-            sprite.localScale = initialScale * shrinkCurve.Evaluate(t);
+            t += Time.deltaTime;
+            float k = t / shrinkDuration;
+            sprite.localScale = start * shrinkCurve.Evaluate(k);
             yield return null;
         }
 
-        // Now the gem is gone; notify above
         GridSystem grid = FindObjectOfType<GridSystem>();
         Gem g = GetComponent<Gem>();
+
         if (grid != null && g != null && !g.hasNotifiedColumn)
         {
             g.toDestroy = true;

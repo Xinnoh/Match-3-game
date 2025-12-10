@@ -6,9 +6,20 @@ public class MatchQueueManager : MonoBehaviour
 {
     public static MatchQueueManager Instance;
 
-    [SerializeField] float delayBetweenMatches = 0.3f;
+    [SerializeField] float delayBetweenMatches = 0.2f;
 
-    private Queue<List<GemMatchEffect>> matchQueue = new Queue<List<GemMatchEffect>>();
+    /// <summary>
+    /// Stores each match made, and plays them in order after a delay
+    /// </summary>
+
+    private class MatchItem
+    {
+        public List<GemMatchEffect> effects;
+        public bool isSpecial;
+        public MatchItem(List<GemMatchEffect> e, bool s) { effects = e; isSpecial = s; }
+    }
+
+    private Queue<MatchItem> matchQueue = new Queue<MatchItem>();
     private bool isPlaying = false;
 
     void Awake()
@@ -21,19 +32,23 @@ public class MatchQueueManager : MonoBehaviour
     {
         if (effects != null && effects.Count > 0)
         {
-            matchQueue.Enqueue(effects);
+            matchQueue.Enqueue(new MatchItem(effects, isSpecial));
             if (!isPlaying)
-                StartCoroutine(PlayQueue(isSpecial));
+            {
+                StartCoroutine(PlayQueue());
+            }
         }
     }
 
-    private IEnumerator PlayQueue(bool isSpecial)
+    private IEnumerator PlayQueue()
     {
         isPlaying = true;
 
         while (matchQueue.Count > 0)
         {
-            var effects = matchQueue.Dequeue();
+            var item = matchQueue.Dequeue();
+            var effects = item.effects;
+            bool isSpecial = item.isSpecial;
 
             for (int i = 0; i < effects.Count; i++)
             {
@@ -46,5 +61,4 @@ public class MatchQueueManager : MonoBehaviour
 
         isPlaying = false;
     }
-
 }

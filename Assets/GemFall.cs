@@ -52,6 +52,8 @@ public class GemFall : MonoBehaviour
 
         int x = startX;
         int y = startY;
+        int topY = grid.Height - 1 + grid.bufferRows;
+
 
         while (true)
         {
@@ -100,6 +102,30 @@ public class GemFall : MonoBehaviour
             gem.transform.position = targetPos;
 
             y = belowY;
+
+            if (y == topY - grid.bufferRows)
+            {
+                GridBox topBox = grid.Boxes[x, topY];
+                if (topBox.heldGem == null)
+                {
+                    // spawn new gem above
+                    Gem newGem = Object.Instantiate(grid.gemPrefab, topBox.transform.position, Quaternion.identity, grid.transform);
+                    GemSO so = grid.gemTypes[Random.Range(0, grid.gemTypes.Count)];
+                    newGem.Init(so, x, topY, grid);
+
+                    // prevent it from matching until it falls
+                    newGem.canMatch = false;
+
+                    grid.Grid[x, topY] = newGem;
+                    topBox.SetGem(newGem);
+
+                    // optional: start falling automatically
+                    newGem.GetComponent<GemFall>()?.CheckIfCanFall();
+                }
+
+                // current gem can now match since it reached second-from-top row
+                gem.canMatch = true;
+            }
         }
 
         isFalling = false;

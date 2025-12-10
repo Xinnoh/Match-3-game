@@ -170,7 +170,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   width: 6
-  height: 7
+  height: 6
+  bufferRows: 3
   cellSize: 1
   backgroundTilePrefab: {fileID: 4888339180104463230, guid: 4c1fce704b27d14409308668bc550331, type: 3}
   centerTarget: {fileID: 1768881741}
@@ -187,7 +188,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   width: 6
-  height: 7
+  height: 6
   cellSize: 1
   gemPrefab: {fileID: 1109781759550646724, guid: 0087e66503e89374ba9edca3dcc8db7e, type: 3}
   gemTypes:
@@ -195,8 +196,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 946b553d01dea8a4e9d6565ae5625296, type: 2}
   - {fileID: 11400000, guid: ccdde6bc1fbc7f848b12ae5dae3b5470, type: 2}
   - {fileID: 11400000, guid: b7c01383973dde04295410314a9fe201, type: 2}
+  bufferRows: 3
   gridAnchor: {fileID: 1768881741}
   swapped: 0
+  boxRoot: {fileID: 469250746}
 --- !u!114 &469250749
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -217,7 +220,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 469250744}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 98a18b4179f388b4f9a9ebfefc5eb496, type: 3}
   m_Name: 

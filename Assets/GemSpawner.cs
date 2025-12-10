@@ -1,18 +1,52 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class GemSpawner : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    GridSystem gridSystem;
+    GridBox[,] boxes;
+
+    void Awake()
     {
-        
+        gridSystem = GetComponent<GridSystem>();
+        boxes = gridSystem.Boxes;
     }
 
-    // Update is called once per frame
     void Update()
     {
-        
+        SpawnTopRowIfNeeded();
+    }
+
+    void SpawnTopRowIfNeeded()
+    {
+        int topY = gridSystem.Height - 1;
+
+        for (int x = 0; x < gridSystem.Width; x++)
+        {
+            // Only check GridBox, as requested
+            if (boxes[x, topY].heldGem == null)
+            {
+                SpawnAtTop(x, topY);
+            }
+        }
+    }
+
+    void SpawnAtTop(int x, int y)
+    {
+        GridBox box = boxes[x, y];
+
+        Gem gem = Instantiate(
+            gridSystem.gemPrefab,
+            box.transform.position,
+            Quaternion.identity,
+            gridSystem.transform
+        );
+
+        GemSO so = gridSystem.gemTypes[Random.Range(0, gridSystem.gemTypes.Count)];
+
+        gem.Init(so, x, y, gridSystem);
+
+        // Update both representations
+        gridSystem.Grid[x, y] = gem;
+        box.SetGem(gem);
     }
 }
