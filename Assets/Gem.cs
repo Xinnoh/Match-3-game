@@ -2,22 +2,22 @@ using UnityEngine;
 
 public class Gem : MonoBehaviour
 {
-    public GemSO data;
-    public int x;
-    public int y;
+    [HideInInspector] public GemSO data;
+    public int x, y;
 
-    [HideInInspector] public bool canMatch = true;
-    [HideInInspector] public bool isMatched;
+    public bool canMatch = true;
+    public bool isMatched, isSpecialMatch;
     [HideInInspector] public bool hasNotifiedColumn = false;
     [HideInInspector] public bool toDestroy;
 
     public Transform spriteTransform;
-    bool dragging;
+    public bool dragging;
     SpriteRenderer sr;
     GridSystem grid;
     Vector3 startPos;
     private GemMatchEffect gemMatchEffect;
     private GemFall gemFall;
+
 
     public void Init(GemSO so, int gx, int gy, GridSystem g)
     {
@@ -60,6 +60,8 @@ public class Gem : MonoBehaviour
 
     void OnMouseDown()
     {
+        if(isMatched) return;
+
         dragging = true;
         startPos = spriteTransform.position;
         grid.StartDrag(this);

@@ -25,7 +25,7 @@ public class GemMatchEffect : MonoBehaviour
             childRenderer = childToAnimate.GetComponent<SpriteRenderer>();
     }
 
-    public void PlayMatchEffect()
+    public void PlayMatchEffect(bool isSpecial)
     {
         if (childToAnimate != null)
         {
@@ -35,9 +35,12 @@ public class GemMatchEffect : MonoBehaviour
             StartCoroutine(InitialMatchEffect());
         }
 
+        if (!isSpecial)
+        {
+            StartCoroutine(ShrinkAndDestroy());
 
+        }
 
-        StartCoroutine(ShrinkAndDestroy());
     }
 
     IEnumerator InitialMatchEffect()

@@ -205,7 +205,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fallDelay: 0
-  fallSpeed: 25
+  fallSpeed: 7
   isFalling: 0
 --- !u!1 &7715263231821146768
 GameObject:

@@ -8,7 +8,7 @@ public class GridBackground : MonoBehaviour
     [SerializeField] Transform backgroundTilePrefab;
     [SerializeField] Transform centerTarget;
 
-    void Start()
+    void Awake()
     {
         GenerateBackgrounds();
     }
@@ -25,7 +25,11 @@ public class GridBackground : MonoBehaviour
             for (int y = 0; y < height; y++)
             {
                 Vector3 pos = origin + new Vector3(x * cellSize, y * cellSize, 0);
-                Instantiate(backgroundTilePrefab, pos, Quaternion.identity, transform);
+                Transform t = Instantiate(backgroundTilePrefab, pos, Quaternion.identity, transform);
+
+                GridBox b = t.GetComponent<GridBox>();
+                if (b != null)
+                    b.SetCoords(x, y);
             }
         }
     }

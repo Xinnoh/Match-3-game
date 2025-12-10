@@ -7,7 +7,7 @@ public class GemFall : MonoBehaviour
     GridSystem grid;
 
     [SerializeField] float fallDelay = 0.3f;
-    [SerializeField] float fallSpeed = 5f; // units per second
+    [SerializeField] float fallSpeed = 5f; 
 
     [HideInInspector] public bool isFalling = false;
 
@@ -17,10 +17,15 @@ public class GemFall : MonoBehaviour
         grid = FindObjectOfType<GridSystem>();
     }
 
+    private void FixedUpdate()
+    {
+        CheckIfCanFall();
+    }
+
     public void CheckIfCanFall()
     {
         if (gem == null || grid == null) return;
-        if (isFalling) return;
+        if (isFalling || gem.isMatched) return;
 
         int x = gem.x;
         int y = gem.y;
@@ -28,15 +33,18 @@ public class GemFall : MonoBehaviour
         int belowY = y - 1;
         if (belowY < 0) return;
 
-        Gem belowGem = grid.GetGemAt(x, belowY);
+        GridBox belowBox = grid.Boxes[x, belowY];
+        Gem belowGem = belowBox.heldGem;
 
-        if (belowGem == null ||
-            belowGem.toDestroy ||
+        // fall if box empty OR gem inside is falling/destroying
+        if (belowGem == null || belowGem.toDestroy ||
             (belowGem.TryGetComponent(out GemFall fall) && fall.isFalling))
         {
             StartCoroutine(FallRoutine(x, y));
         }
     }
+
+
     IEnumerator FallRoutine(int startX, int startY)
     {
         isFalling = true;
@@ -50,31 +58,35 @@ public class GemFall : MonoBehaviour
             int belowY = y - 1;
             if (belowY < 0) break;
 
-            Gem belowGem = grid.GetGemAt(x, belowY);
+            GridBox belowBox = grid.Boxes[x, belowY];
+            Gem belowGem = belowBox.heldGem;
+
             if (belowGem != null)
             {
                 var fallScript = belowGem.GetComponent<GemFall>();
-
                 bool gemShouldFall = !belowGem.toDestroy && (fallScript == null || !fallScript.isFalling);
-
                 if (gemShouldFall) break;
             }
 
             yield return new WaitForSeconds(fallDelay);
 
-            // Update grid
+            // clear old box
+            grid.Boxes[x, y].SetGem(null);
+
+            // update grid and box
             grid.Grid[x, y] = null;
             grid.Grid[x, belowY] = gem;
+            grid.Boxes[x, belowY].SetGem(gem);
 
-            // Update gem coordinates immediately
+            // update gem coords
             gem.y = belowY;
 
-            // Animate sprite visually, but keep parent at grid position for logic
+            // animate sprite
             Vector3 startPos = gem.spriteTransform.position;
-            Vector3 targetPos = grid.Origin + new Vector3(x * grid.CellSize, belowY * grid.CellSize, 0);
+            Vector3 targetPos = grid.Boxes[x, belowY].transform.position;
 
             float dist = Vector3.Distance(startPos, targetPos);
-            float duration = dist / 5f; // fallSpeed, adjust as needed
+            float duration = dist / fallSpeed;
             float t = 0f;
 
             while (t < 1f)
@@ -85,8 +97,6 @@ public class GemFall : MonoBehaviour
             }
 
             gem.spriteTransform.position = targetPos;
-
-            // Move parent to the grid location **after animation**
             gem.transform.position = targetPos;
 
             y = belowY;
@@ -97,9 +107,6 @@ public class GemFall : MonoBehaviour
 
         yield return null;
 
-        var detector = gem.GetComponent<MatchDetector>();
-        if (detector != null)
-            detector.GetMatches();
+        gem.GetComponent<MatchDetector>()?.GetMatches();
     }
-
 }

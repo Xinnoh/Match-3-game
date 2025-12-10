@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq; // Used for convenient List operations
 
 public class MatchDetector : MonoBehaviour
 {
@@ -12,90 +13,209 @@ public class MatchDetector : MonoBehaviour
         grid = FindObjectOfType<GridSystem>();
     }
 
+    /// <summary>
+    /// Finds primary match centered on this gem and enqueues it. 
+    /// Then recursively checks for orthogonal secondary matches 
+    /// for every gem involved in the primary match.
+    /// </summary>
+    /// 
     public List<Gem> GetMatches()
     {
-        List<Gem> matched = new List<Gem>();
-        if (gem == null || grid == null || !gem.canMatch) return matched;
+        if (gem == null || grid == null || !gem.canMatch || gem.dragging)
+            return new List<Gem>();
 
         int gx = gem.x;
         int gy = gem.y;
-        Gem center = grid.GetGemAt(gx, gy);
-        if (center == null) return matched;
+        Gem thisGem = grid.GetGemAt(gx, gy);
 
-        List<Gem> matchedThisCheck = new List<Gem>();
+        if (thisGem == null || thisGem.dragging || thisGem.data == null)
+            return new List<Gem>();
 
-        // Horizontal
-        // Checks a direction. If it's match, add. If not, break.
+        // --- 1. Find Primary Match ---
+        List<Gem> horizontal = FindLineMatch(thisGem, gx, gy, 1, 0);
+        List<Gem> vertical = FindLineMatch(thisGem, gx, gy, 0, 1);
 
-        List<Gem> horizontal = new List<Gem> { center };
-        for (int x = gx - 1; x >= 0; x--)
-        {
-            Gem g = grid.GetGemAt(x, gy);
-            if (g != null && g.data == center.data && g.canMatch)
-                horizontal.Add(g);
-            else break;
-        }
-        for (int x = gx + 1; x < grid.Width; x++)
-        {
-            Gem g = grid.GetGemAt(x, gy);
-            if (g != null && g.data == center.data && g.canMatch)
-                horizontal.Add(g);
-            else break;
-        }
+        List<Gem> primaryMatched = new List<Gem>();
+        bool isSpecialMatch = horizontal.Count >= 3 && vertical.Count >= 3;
+
         if (horizontal.Count >= 3)
-            matchedThisCheck.AddRange(horizontal);
-
-        // Vertical
-        List<Gem> vertical = new List<Gem> { center };
-        for (int y = gy - 1; y >= 0; y--)
-        {
-            Gem g = grid.GetGemAt(gx, y);
-            if (g != null && g.data == center.data && g.canMatch)
-                vertical.Add(g);
-            else break;
-        }
-        for (int y = gy + 1; y < grid.Height; y++)
-        {
-            Gem g = grid.GetGemAt(gx, y);
-            if (g != null && g.data == center.data && g.canMatch)
-                vertical.Add(g);
-            else break;
-        }
+            primaryMatched.AddRange(horizontal);
         if (vertical.Count >= 3)
-            matchedThisCheck.AddRange(vertical);
+            primaryMatched = primaryMatched.Union(vertical).ToList();
 
-        // Remove duplicates
-        foreach (Gem g in matchedThisCheck)
+        // --- 2. Process and Enqueue Primary Match ---
+        if (primaryMatched.Count >= 3)
         {
-            if (!matched.Contains(g))
-                matched.Add(g);
-        }
-
-
-        if (matched.Count >= 3)
-        {
-            // Trigger match effect on all gems in this match
-            List<GemMatchEffect> effects = new List<GemMatchEffect>();
-            foreach (Gem g in matched)
+            if (isSpecialMatch)
             {
-                g.isMatched = true;
-                if (g != center)
-                    g.canMatch = false;
+                List<Gem> firstMatch = (horizontal.Count >= vertical.Count) ? horizontal : vertical;
+                List<Gem> secondMatch = (horizontal.Count >= vertical.Count) ? vertical : horizontal;
 
-                var effect = g.GetComponent<GemMatchEffect>();
-                if (effect != null)
-                    effects.Add(effect);
+                // Convert gems to effects before queuing
+                List<GemMatchEffect> firstEffects = firstMatch
+                    .Select(g => g.GetComponent<GemMatchEffect>())
+                    .Where(e => e != null)
+                    .ToList();
+                MatchQueueManager.Instance.EnqueueMatch(firstEffects, true);
+
+                List<GemMatchEffect> secondEffects = secondMatch
+                    .Select(g => g.GetComponent<GemMatchEffect>())
+                    .Where(e => e != null)
+                    .ToList();
+                MatchQueueManager.Instance.EnqueueMatch(secondEffects, false);
+            }
+            else
+            {
+                List<GemMatchEffect> normalEffects = primaryMatched
+                    .Select(g => g.GetComponent<GemMatchEffect>())
+                    .Where(e => e != null)
+                    .ToList();
+                MatchQueueManager.Instance.EnqueueMatch(normalEffects, false);
             }
 
-            // Add entire match to the queue
-            MatchQueueManager.Instance.EnqueueMatch(effects);
+            // Mark all gems involved for future checks
+            foreach (Gem g in primaryMatched)
+            {
+                g.isMatched = true;
+                g.canMatch = false;
+            }
 
-            center.canMatch = false; // mark center as done
+            // --- Recursive Orthogonal Check ---
+            foreach (Gem g in primaryMatched)
+            {
+                FindOrthogonalMatches(g);
+            }
         }
 
-        return matched;
+        return primaryMatched;
     }
 
 
+    /// <summary>
+    /// Checks for a match orthogonal (opposite direction) to the one that 
+    /// originally triggered this gem's inclusion, then enqueues it if found.
+    /// </summary>
+    /// <param name="g">The gem to check for an orthogonal match.</param>
+    private void FindOrthogonalMatches(Gem g)
+    {
+        // Safety check: only check gems that were matched but are not fully processed yet
+        if (g == null || g.data == null || !g.isMatched) return;
 
+        int gx = g.x;
+        int gy = g.y;
+
+        // Since we don't know if the gem was matched horizontally or vertically, 
+        // we check both directions again.
+
+        // Check Horizontal match 
+        List<Gem> horizontal = FindLineMatch(g, gx, gy, 1, 0);
+
+        // Check Vertical match
+        List<Gem> vertical = FindLineMatch(g, gx, gy, 0, 1);
+
+        List<Gem> orthogonalMatched = new List<Gem>();
+
+        // IMPORTANT: We only care about secondary matches that are 3+ long AND 
+        // that are *different* from the primary match direction.
+        // Since primaryMatched already covered the T/L case centered on thisGem, 
+        // this check is for secondary T/L/Cross matches centered on other gems.
+
+        // Check horizontal (if it's a new 3+ match)
+        if (horizontal.Count >= 3)
+        {
+            orthogonalMatched.AddRange(horizontal.Where(gem => !gem.isMatched));
+        }
+
+        // Check vertical (if it's a new 3+ match)
+        if (vertical.Count >= 3)
+        {
+            orthogonalMatched = orthogonalMatched.Union(vertical.Where(gem => !gem.isMatched)).ToList();
+        }
+
+        // If a new, secondary match is found:
+        if (orthogonalMatched.Count > 0)
+        {
+            List<GemMatchEffect> secondaryEffects = new List<GemMatchEffect>();
+
+            foreach (Gem matchedGem in orthogonalMatched)
+            {
+                // Note: The gem that triggered this check (g) might be in the orthogonal list, 
+                // but its effects should already be in the primary queue. 
+                // We only need to process *new* gems that haven't been marked.
+                if (!matchedGem.isMatched)
+                {
+                    matchedGem.isMatched = true;
+                    matchedGem.canMatch = false;
+
+                    var effect = matchedGem.GetComponent<GemMatchEffect>();
+                    if (effect != null)
+                        secondaryEffects.Add(effect);
+                }
+            }
+
+            if (secondaryEffects.Count > 0)
+            {
+                // Enqueue the secondary match effects
+                MatchQueueManager.Instance.EnqueueMatch(secondaryEffects, false);
+            }
+
+            // RECURSION: Check all newly matched gems for further orthogonal matches
+            foreach (Gem nextGem in orthogonalMatched)
+            {
+                // We recursively check the newly matched gems for *their* orthogonal matches.
+                // This handles a complex cascading match (e.g., a cross shape creating another cross shape).
+                FindOrthogonalMatches(nextGem);
+            }
+        }
+    }
+
+
+    private List<Gem> FindLineMatch(Gem centerGem, int gx, int gy, int dx, int dy)
+    {
+        List<Gem> line = new List<Gem> { centerGem };
+
+        // Check in the negative direction (e.g., left or down)
+        for (int i = 1; ; i++)
+        {
+            int x = gx - i * dx;
+            int y = gy - i * dy;
+
+            // Grid boundary check
+            if (!grid.InBounds(x, y))
+                break;
+
+            Gem g = grid.GetGemAt(x, y);
+            if (g != null && g.data == centerGem.data && g.canMatch)
+            {
+                line.Add(g);
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        // Check in the positive direction (e.g., right or up)
+        for (int i = 1; ; i++)
+        {
+            int x = gx + i * dx;
+            int y = gy + i * dy;
+
+            // Grid boundary check
+            if (!grid.InBounds(x, y))
+                break;
+
+            Gem g = grid.GetGemAt(x, y);
+            if (g != null && g.data == centerGem.data && g.canMatch)
+            {
+                line.Add(g);
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        return line;
+    }
 }

@@ -17,17 +17,17 @@ public class MatchQueueManager : MonoBehaviour
         else Destroy(gameObject);
     }
 
-    public void EnqueueMatch(List<GemMatchEffect> effects)
+    public void EnqueueMatch(List<GemMatchEffect> effects, bool isSpecial)
     {
         if (effects != null && effects.Count > 0)
         {
             matchQueue.Enqueue(effects);
             if (!isPlaying)
-                StartCoroutine(PlayQueue());
+                StartCoroutine(PlayQueue(isSpecial));
         }
     }
 
-    private IEnumerator PlayQueue()
+    private IEnumerator PlayQueue(bool isSpecial)
     {
         isPlaying = true;
 
@@ -35,16 +35,16 @@ public class MatchQueueManager : MonoBehaviour
         {
             var effects = matchQueue.Dequeue();
 
-            // Play all effects in this match simultaneously
-            foreach (var effect in effects)
+            for (int i = 0; i < effects.Count; i++)
             {
-                effect.PlayMatchEffect();
+                bool passSpecial = isSpecial && i == 0;
+                effects[i].PlayMatchEffect(passSpecial);
             }
 
-            // Wait for a short delay before next match in the queue
             yield return new WaitForSeconds(delayBetweenMatches);
         }
 
         isPlaying = false;
     }
+
 }

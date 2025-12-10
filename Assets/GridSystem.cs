@@ -19,13 +19,21 @@ public class GridSystem : MonoBehaviour
 
     Vector3 origin;
 
+    [SerializeField] GridBox[,] boxes;
+    public GridBox[,] Boxes => boxes;
+
+    [SerializeField] Transform boxRoot;
+
     public Vector3 Origin => origin;
     public float CellSize => cellSize;
     public int Width => width;
     public int Height => height;
 
+
     void Start()
     {
+        LoadGridBoxes();
+
         grid = new Gem[width, height];
         CalculateOrigin();
         Generate();
@@ -47,6 +55,18 @@ public class GridSystem : MonoBehaviour
         origin = gridAnchor.position - new Vector3(totalW / 2f, totalH / 2f, 0f);
     }
 
+    void LoadGridBoxes()
+    {
+        boxes = new GridBox[width, height];
+
+        foreach (Transform t in boxRoot)
+        {
+            GridBox b = t.GetComponent<GridBox>();
+            if (b != null)
+                boxes[b.gx, b.gy] = b;
+        }
+    }
+
     void Generate()
     {
         for (int x = 0; x < width; x++)
@@ -62,10 +82,15 @@ public class GridSystem : MonoBehaviour
 
         do
         {
+            if (boxes[x, y] == null)
+            {
+                Debug.LogError("Missing GridBox at: " + x + "," + y);
+            }
+
             so = gemTypes[Random.Range(0, gemTypes.Count)];
             if (gem == null)
             {
-                gem = Instantiate(gemPrefab, origin + new Vector3(x * cellSize, y * cellSize, 0), Quaternion.identity, transform);
+                gem = Instantiate(gemPrefab, boxes[x, y].transform.position, Quaternion.identity, transform);
             }
             gem.Init(so, x, y, this);
             attempts++;
@@ -86,6 +111,7 @@ public class GridSystem : MonoBehaviour
         while (FormsInitialMatch(x, y, so));
 
         grid[x, y] = gem;
+        boxes[x, y].SetGem(gem);
     }
 
     bool FormsInitialMatch(int x, int y, GemSO so)
@@ -121,6 +147,7 @@ public class GridSystem : MonoBehaviour
 
     public bool IsDragging(Gem g) => dragging == g;
 
+
     public void EndDrag()
     {
         if (dragging == null) return;
@@ -133,28 +160,74 @@ public class GridSystem : MonoBehaviour
         int tx = Mathf.RoundToInt(m.x / cellSize);
         int ty = Mathf.RoundToInt(m.y / cellSize);
 
-        Gem target = null;
-        if (InBounds(tx, ty))
-            target = grid[tx, ty];
-
-        if (target != null && target != dragging)
+        if (InBounds(tx, ty) && boxes[tx, ty] != null)
         {
-            Swap(dragging, target);
-            swapped = true;
+            Gem targetLocation = grid[tx, ty];
+            
+            // Do not swap if target is currently matching
+            if (targetLocation == null || !targetLocation.isMatched)
+            {
+                SwapToBox(dragging, tx, ty);
+                swapped = true;
 
-            // Check matches for both gems
-            dragging.GetComponent<MatchDetector>().GetMatches();
-            target.GetComponent<MatchDetector>().GetMatches();
+                if (targetLocation != null)
+                {
+                    dragging.GetComponent<MatchDetector>().GetMatches();
+                    targetLocation.GetComponent<MatchDetector>().GetMatches();
+                }
+                else
+                {
+                    dragging.GetComponent<MatchDetector>().GetMatches();
+                }
+            }
         }
 
         // Snap back if no swap occurred
         if (!swapped)
         {
-            dragging.transform.position = origin + new Vector3(dragging.x * cellSize, dragging.y * cellSize, 0);
+            dragging.transform.position = boxes[dragging.x, dragging.y].transform.position;
+            boxes[dragging.x, dragging.y].SetGem(dragging);
         }
 
         dragging = null;
-    
+    }
+
+    void SwapToBox(Gem a, int tx, int ty)
+    {
+        int ax = a.x;
+        int ay = a.y;
+
+        Gem b = grid[tx, ty];     // can be null
+
+        // If there is a gem in the target box, swap
+        if (b != null)
+        {
+            grid[ax, ay] = b;
+            grid[tx, ty] = a;
+
+            a.x = tx; a.y = ty;
+            b.x = ax; b.y = ay;
+
+            a.transform.position = boxes[tx, ty].transform.position;
+            b.transform.position = boxes[ax, ay].transform.position;
+
+            boxes[ax, ay].SetGem(b);
+            boxes[tx, ty].SetGem(a);
+        }
+        else
+        {
+            // Move only A
+            grid[ax, ay] = null;
+            grid[tx, ty] = a;
+
+            a.x = tx;
+            a.y = ty;
+
+            a.transform.position = boxes[tx, ty].transform.position;
+
+            boxes[ax, ay].SetGem(null);
+            boxes[tx, ty].SetGem(a);
+        }
     }
 
 
@@ -169,8 +242,11 @@ public class GridSystem : MonoBehaviour
         a.x = bx; a.y = by;
         b.x = ax; b.y = ay;
 
-        a.transform.position = origin + new Vector3(bx * cellSize, by * cellSize, 0);
-        b.transform.position = origin + new Vector3(ax * cellSize, ay * cellSize, 0);
+        a.transform.position = boxes[bx, by].transform.position;
+        b.transform.position = boxes[ax, ay].transform.position;
+
+        boxes[ax, ay].SetGem(b);
+        boxes[bx, by].SetGem(a);
     }
 
     public Gem GetGemAt(int x, int y)
@@ -179,7 +255,7 @@ public class GridSystem : MonoBehaviour
         return grid[x, y];
     }
 
-    bool InBounds(int x, int y)
+    public bool InBounds(int x, int y)
     {
         return x >= 0 && y >= 0 && x < width && y < height;
     }
