@@ -3,18 +3,18 @@ using UnityEngine;
 
 public class GemFall : MonoBehaviour
 {
-    Gem gem;
-    GridSystem grid;
+    private Gem gem;
+    private GridSystem grid;
 
     [SerializeField] float fallDelay = 0.3f;
-    [SerializeField] float fallSpeed = 5f; 
+    [SerializeField] float fallSpeed = 5f;
 
-    [HideInInspector] public bool isFalling = false;
+    public bool isFalling = false;
 
     void Awake()
     {
         gem = GetComponent<Gem>();
-        grid = FindObjectOfType<GridSystem>();
+        grid = FindFirstObjectByType<GridSystem>();
     }
 
     private void FixedUpdate()
@@ -36,7 +36,6 @@ public class GemFall : MonoBehaviour
         GridBox belowBox = grid.Boxes[x, belowY];
         Gem belowGem = belowBox.heldGem;
 
-        // fall if box empty OR gem inside is falling/destroying
         if (belowGem == null || belowGem.toDestroy ||
             (belowGem.TryGetComponent(out GemFall fall) && fall.isFalling))
         {
@@ -52,13 +51,15 @@ public class GemFall : MonoBehaviour
 
         int x = startX;
         int y = startY;
-        int topY = grid.Height - 1 + grid.bufferRows;
-
+        int topY = grid.Height - 1;
 
         while (true)
         {
             int belowY = y - 1;
-            if (belowY < 0) break;
+            if (belowY < 0)
+            {
+                break;
+            }
 
             GridBox belowBox = grid.Boxes[x, belowY];
             Gem belowGem = belowBox.heldGem;
@@ -67,28 +68,31 @@ public class GemFall : MonoBehaviour
             {
                 var fallScript = belowGem.GetComponent<GemFall>();
                 bool gemShouldFall = !belowGem.toDestroy && (fallScript == null || !fallScript.isFalling);
-                if (gemShouldFall) break;
+
+                if (gemShouldFall)
+                {
+                    break;
+                }
             }
 
+            // This is required else spawning breaks
             yield return new WaitForSeconds(fallDelay);
 
-            // clear old box
-            grid.Boxes[x, y].SetGem(null);
 
-            // update grid and box
+            grid.Boxes[x, y].SetGem(null);
             grid.Grid[x, y] = null;
             grid.Grid[x, belowY] = gem;
             grid.Boxes[x, belowY].SetGem(gem);
 
-            // update gem coords
             gem.y = belowY;
 
-            // animate sprite
             Vector3 startPos = gem.spriteTransform.position;
             Vector3 targetPos = grid.Boxes[x, belowY].transform.position;
 
             float dist = Vector3.Distance(startPos, targetPos);
             float duration = dist / fallSpeed;
+
+
             float t = 0f;
 
             while (t < 1f)
@@ -102,30 +106,6 @@ public class GemFall : MonoBehaviour
             gem.transform.position = targetPos;
 
             y = belowY;
-
-            if (y == topY - grid.bufferRows)
-            {
-                GridBox topBox = grid.Boxes[x, topY];
-                if (topBox.heldGem == null)
-                {
-                    // spawn new gem above
-                    Gem newGem = Object.Instantiate(grid.gemPrefab, topBox.transform.position, Quaternion.identity, grid.transform);
-                    GemSO so = grid.gemTypes[Random.Range(0, grid.gemTypes.Count)];
-                    newGem.Init(so, x, topY, grid);
-
-                    // prevent it from matching until it falls
-                    newGem.canMatch = false;
-
-                    grid.Grid[x, topY] = newGem;
-                    topBox.SetGem(newGem);
-
-                    // optional: start falling automatically
-                    newGem.GetComponent<GemFall>()?.CheckIfCanFall();
-                }
-
-                // current gem can now match since it reached second-from-top row
-                gem.canMatch = true;
-            }
         }
 
         isFalling = false;

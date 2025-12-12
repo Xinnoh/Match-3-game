@@ -10,9 +10,6 @@ public class GemMatchEffect : MonoBehaviour
     [SerializeField] float ringDuration = 0.3f;
     [SerializeField] float maxRingScale = 1.5f;
 
-    [SerializeField] float pulsePeak = 1.3f;
-    [SerializeField] float pulseUpTime = 0.2f;
-    [SerializeField] float pulseDownTime = 0.3f;
 
     [SerializeField] AnimationCurve shrinkCurve;
     [SerializeField] float shrinkDelay = 0.2f;
@@ -30,7 +27,6 @@ public class GemMatchEffect : MonoBehaviour
     {
 
         StartCoroutine(RingEffect());
-        StartCoroutine(PulseEffect());
 
         if (!isSpecial)
             StartCoroutine(ShrinkDisappear());
@@ -62,36 +58,7 @@ public class GemMatchEffect : MonoBehaviour
         childToAnimate.localScale = startScale * (ringCurve.Evaluate(1f) * maxRingScale);
     }
 
-
-    //----------------------------
-    //  EFFECT 2
-    //----------------------------
-    IEnumerator PulseEffect()
-    {
-        float t = 0f;
-        Vector3 start = Vector3.one;
-
-        // pulse up
-        while (t < pulseUpTime)
-        {
-            t += Time.deltaTime;
-            float k = t / pulseUpTime;
-            sprite.localScale = Vector3.Lerp(start, start * pulsePeak, k);
-            yield return null;
-        }
-
-        // pulse down
-        t = 0f;
-        while (t < pulseDownTime)
-        {
-            t += Time.deltaTime;
-            float k = t / pulseDownTime;
-            sprite.localScale = Vector3.Lerp(start * pulsePeak, start, k);
-            yield return null;
-        }
-
-        sprite.localScale = start;
-    }
+    
 
 
     //----------------------------
@@ -112,7 +79,7 @@ public class GemMatchEffect : MonoBehaviour
             yield return null;
         }
 
-        GridSystem grid = FindObjectOfType<GridSystem>();
+        GridSystem grid = FindFirstObjectByType<GridSystem>();
         Gem g = GetComponent<Gem>();
 
         if (grid != null && g != null && !g.hasNotifiedColumn)

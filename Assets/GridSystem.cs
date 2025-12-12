@@ -8,7 +8,6 @@ public class GridSystem : MonoBehaviour
     [SerializeField] float cellSize = 1f;
     public Gem gemPrefab;
     public List<GemSO> gemTypes;
-    public int bufferRows = 4;
 
     [SerializeField] Transform gridAnchor;   // grid starting point
     
@@ -30,14 +29,20 @@ public class GridSystem : MonoBehaviour
     public int Width => width;
     public int Height => height;
 
+    private GemSpawner gemSpawner;
+
 
     void Start()
     {
         LoadGridBoxes();
 
-        grid = new Gem[width, height + bufferRows];
+        grid = new Gem[width, height];
         CalculateOrigin();
         Generate();
+
+        gemSpawner = GetComponent<GemSpawner>();
+        gemSpawner.Initialise();
+        
     }
 
     private void Update()
@@ -53,14 +58,14 @@ public class GridSystem : MonoBehaviour
     void CalculateOrigin()
     {
         float totalW = (width - 1) * cellSize;
-        float totalH = (height - 1 + bufferRows) * cellSize;
+        float totalH = (height - 1) * cellSize;
 
         origin = gridAnchor.position - new Vector3(totalW / 2f, totalH / 2f, 0f);
     }
 
     void LoadGridBoxes()
     {
-        boxes = new GridBox[width, height + bufferRows];
+        boxes = new GridBox[width, height];
 
         foreach (Transform t in boxRoot)
         {
@@ -73,7 +78,7 @@ public class GridSystem : MonoBehaviour
     void Generate()
     {
         for (int x = 0; x < width; x++)
-            for (int y = 0; y < height + bufferRows; y++)
+            for (int y = 0; y < height; y++)
                 SpawnRandom(x, y);
     }
 
@@ -238,13 +243,13 @@ public class GridSystem : MonoBehaviour
 
     public Gem GetGemAt(int x, int y)
     {
-        if (x < 0 || y < 0 || x >= width || y >= height + bufferRows) return null;
+        if (x < 0 || y < 0 || x >= width || y >= height) return null;
         return grid[x, y];
     }
 
     public bool InBounds(int x, int y)
     {
-        return x >= 0 && y >= 0 && x < width && y < height + bufferRows;
+        return x >= 0 && y >= 0 && x < width && y < height;
     }
 
 

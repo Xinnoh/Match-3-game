@@ -5,7 +5,7 @@ public class GemSpawner : MonoBehaviour
     GridSystem gridSystem;
     GridBox[,] boxes;
 
-    void Awake()
+    public void Initialise()
     {
         gridSystem = GetComponent<GridSystem>();
         boxes = gridSystem.Boxes;
@@ -22,8 +22,9 @@ public class GemSpawner : MonoBehaviour
 
         for (int x = 0; x < gridSystem.Width; x++)
         {
+
             // Only check GridBox, as requested
-            if (boxes[x, topY].heldGem == null)
+            if (boxes[x, topY - 1].heldGem == null && boxes[x, topY].heldGem == null)
             {
                 SpawnAtTop(x, topY);
             }

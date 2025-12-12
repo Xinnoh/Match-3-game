@@ -38,6 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
+  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -66,9 +67,6 @@ LightmapSettings:
     m_LightmapParameters: {fileID: 0}
     m_LightmapsBakeMode: 1
     m_TextureCompression: 1
-    m_FinalGather: 0
-    m_FinalGatherFiltering: 1
-    m_FinalGatherRayCount: 256
     m_ReflectionCompression: 2
     m_MixedBakeMode: 2
     m_BakeBackend: 1
@@ -170,8 +168,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   width: 6
-  height: 6
-  bufferRows: 3
+  height: 7
   cellSize: 1
   backgroundTilePrefab: {fileID: 4888339180104463230, guid: 4c1fce704b27d14409308668bc550331, type: 3}
   centerTarget: {fileID: 1768881741}
@@ -188,7 +185,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   width: 6
-  height: 6
+  height: 7
   cellSize: 1
   gemPrefab: {fileID: 1109781759550646724, guid: 0087e66503e89374ba9edca3dcc8db7e, type: 3}
   gemTypes:
@@ -196,7 +193,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 946b553d01dea8a4e9d6565ae5625296, type: 2}
   - {fileID: 11400000, guid: ccdde6bc1fbc7f848b12ae5dae3b5470, type: 2}
   - {fileID: 11400000, guid: b7c01383973dde04295410314a9fe201, type: 2}
-  bufferRows: 3
   gridAnchor: {fileID: 1768881741}
   swapped: 0
   boxRoot: {fileID: 469250746}
@@ -212,7 +208,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 13c63ceeb7558dd439ce79363376ded5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  delayBetweenMatches: 0.2
+  delayBetweenMatches: 0.25
 --- !u!114 &469250750
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -220,7 +216,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 469250744}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 98a18b4179f388b4f9a9ebfefc5eb496, type: 3}
   m_Name: 
@@ -290,12 +286,12 @@ MonoBehaviour:
   m_RequiresColorTexture: 0
   m_Version: 2
   m_TaaSettings:
-    m_Quality: 3
-    m_FrameInfluence: 0.1
-    m_JitterScale: 1
-    m_MipBias: 0
-    m_VarianceClampScale: 0.9
-    m_ContrastAdaptiveSharpening: 0
+    quality: 3
+    frameInfluence: 0.1
+    jitterScale: 1
+    mipBias: 0
+    varianceClampScale: 0.9
+    contrastAdaptiveSharpening: 0
 --- !u!20 &519420031
 Camera:
   m_ObjectHideFlags: 0
@@ -391,14 +387,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 073797afb82c5a1438f328866b10b3f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_ComponentVersion: 1
+  m_ComponentVersion: 2
   m_LightType: 4
   m_BlendStyleIndex: 0
   m_FalloffIntensity: 0.5
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 1
   m_LightVolumeIntensity: 1
-  m_LightVolumeIntensityEnabled: 0
+  m_LightVolumeEnabled: 0
   m_ApplyToSortingLayers: 0000000093dcf8b2fdfd04340546e79a
   m_LightCookieSprite: {fileID: 0}
   m_DeprecatedPointLightCookieSprite: {fileID: 0}
@@ -408,8 +404,10 @@ MonoBehaviour:
   m_NormalMapDistance: 3
   m_NormalMapQuality: 2
   m_UseNormalMap: 0
-  m_ShadowIntensityEnabled: 0
+  m_ShadowsEnabled: 0
   m_ShadowIntensity: 0.75
+  m_ShadowSoftness: 0
+  m_ShadowSoftnessFalloffIntensity: 0.5
   m_ShadowVolumeIntensityEnabled: 0
   m_ShadowVolumeIntensity: 0.75
   m_LocalBounds:

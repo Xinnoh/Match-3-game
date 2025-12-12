@@ -10,7 +10,7 @@ public class MatchDetector : MonoBehaviour
     void Awake()
     {
         gem = GetComponent<Gem>();
-        grid = FindObjectOfType<GridSystem>();
+        grid = FindFirstObjectByType<GridSystem>();
     }
 
     /// <summary>
