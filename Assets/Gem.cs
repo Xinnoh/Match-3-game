@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class Gem : MonoBehaviour
 {
-    [HideInInspector] public GemSO data;
+    [HideInInspector] public GemSO gemSO;
     public int x, y;
 
     public bool canMatch = true;
@@ -19,9 +19,10 @@ public class Gem : MonoBehaviour
     private GemFall gemFall;
 
 
-    public void Init(GemSO so, int gx, int gy, GridSystem g)
+
+    public void Init(GemSO gemSOParent, int gx, int gy, GridSystem g)
     {
-        data = so;
+        gemSO = gemSOParent;
         x = gx;
         y = gy;
         grid = g;
@@ -38,7 +39,7 @@ public class Gem : MonoBehaviour
             sr = spriteTransform.GetComponent<SpriteRenderer>();
         }
 
-        sr.sprite = so.sprite;
+        sr.sprite = gemSO.sprite;
         spriteTransform.position = transform.position;
 
         gemMatchEffect = GetComponent<GemMatchEffect>();
@@ -57,15 +58,15 @@ public class Gem : MonoBehaviour
                 12f * Time.deltaTime
             );
     }
-
     void OnMouseDown()
     {
-        if(isMatched) return;
+        if (!CanDrag()) return;
 
         dragging = true;
         startPos = spriteTransform.position;
         grid.StartDrag(this);
     }
+
 
     void OnMouseDrag()
     {
@@ -88,4 +89,12 @@ public class Gem : MonoBehaviour
         if(spriteTransform != null)
             Destroy(spriteTransform.gameObject);
     }
+
+    bool CanDrag()
+    {
+        if (isMatched) return false;
+        if (TurnManager.Instance == null) return true;
+        return TurnManager.Instance.CanMove;
+    }
+
 }

@@ -74,13 +74,13 @@ public class GridSystem : MonoBehaviour
                 boxes[b.gx, b.gy] = b;
         }
     }
-
     void Generate()
     {
         for (int x = 0; x < width; x++)
-            for (int y = 0; y < height; y++)
+            for (int y = 0; y < height - 1; y++)
                 SpawnRandom(x, y);
     }
+
 
     // Place random gems on grid
     // Also makes sure there's no matches
@@ -132,7 +132,7 @@ public class GridSystem : MonoBehaviour
         {
             if (grid[x - 1, y] != null && grid[x - 2, y] != null)
             {
-                if (grid[x - 1, y].data == so && grid[x - 2, y].data == so)
+                if (grid[x - 1, y].gemSO == so && grid[x - 2, y].gemSO == so)
                     return true;
             }
         }
@@ -142,7 +142,7 @@ public class GridSystem : MonoBehaviour
         {
             if (grid[x, y - 1] != null && grid[x, y - 2] != null)
             {
-                if (grid[x, y - 1].data == so && grid[x, y - 2].data == so)
+                if (grid[x, y - 1].gemSO == so && grid[x, y - 2].gemSO == so)
                     return true;
             }
         }
@@ -224,9 +224,10 @@ public class GridSystem : MonoBehaviour
             boxes[ax, ay].SetGem(b);
             boxes[tx, ty].SetGem(a);
         }
+
+        // If no gem in target, just move A
         else
         {
-            // Move only A
             grid[ax, ay] = null;
             grid[tx, ty] = a;
 

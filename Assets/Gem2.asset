@@ -14,3 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gemName: Square
   sprite: {fileID: 2801231552284419624, guid: 4d054e73e6ee9a14fa37361ed5b1e40c, type: 3}
+  attackStat: 60
+  level: 1
+  exp: 0
+  skills: []
+  hasMega: 0

@@ -27,7 +27,7 @@ public class MatchDetector : MonoBehaviour
         int gy = gem.y;
         Gem thisGem = grid.GetGemAt(gx, gy);
 
-        if (thisGem == null || thisGem.dragging || thisGem.data == null)
+        if (thisGem == null || thisGem.dragging || thisGem.gemSO == null)
             return new List<Gem>();
 
         // --- 1. Find Primary Match ---
@@ -98,7 +98,7 @@ public class MatchDetector : MonoBehaviour
     private void FindOrthogonalMatches(Gem g)
     {
         // Safety check: only check gems that were matched but are not fully processed yet
-        if (g == null || g.data == null || !g.isMatched) return;
+        if (g == null || g.gemSO == null || !g.isMatched) return;
 
         int gx = g.x;
         int gy = g.y;
@@ -184,7 +184,7 @@ public class MatchDetector : MonoBehaviour
                 break;
 
             Gem g = grid.GetGemAt(x, y);
-            if (g != null && g.data == centerGem.data && g.canMatch)
+            if (g != null && g.gemSO == centerGem.gemSO && g.canMatch)
             {
                 line.Add(g);
             }
@@ -205,7 +205,7 @@ public class MatchDetector : MonoBehaviour
                 break;
 
             Gem g = grid.GetGemAt(x, y);
-            if (g != null && g.data == centerGem.data && g.canMatch)
+            if (g != null && g.gemSO == centerGem.gemSO && g.canMatch)
             {
                 line.Add(g);
             }

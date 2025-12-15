@@ -9,13 +9,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e8b03160f09f0304998f2f5609f360d8, type: 3}
-  m_Name: Gem3
+  m_Script: {fileID: 11500000, guid: 388e5f747d7b57c438a13b07ac55fc52, type: 3}
+  m_Name: Skill5Up
   m_EditorClassIdentifier: 
-  gemName: Triangle
-  sprite: {fileID: 8745396460363951343, guid: 4d054e73e6ee9a14fa37361ed5b1e40c, type: 3}
-  attackStat: 40
-  level: 1
-  exp: 0
-  skills: []
-  hasMega: 0
+  skillName: 4 Up
+  skillDescription: Increases Damage on Match 4
+  skillType: 2
+  matchType: 5
+  targetType: 6
+  sprite: {fileID: 0}
+  damageMult: 2
+  m3Proc: 0
+  m4Proc: 0
+  m5Proc: 1

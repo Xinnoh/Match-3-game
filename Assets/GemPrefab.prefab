@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 8446565640700391216}
   - component: {fileID: 8707589643951931790}
   m_Layer: 0
-  m_Name: GemHolder
+  m_Name: GemPrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

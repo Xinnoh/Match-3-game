@@ -14,3 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gemName: Diamond
   sprite: {fileID: -4177220209166712611, guid: 4d054e73e6ee9a14fa37361ed5b1e40c, type: 3}
+  attackStat: 50
+  level: 1
+  exp: 0
+  skills:
+  - {fileID: 11400000, guid: 6ddb0ee20a2276344805f54496593de5, type: 2}
+  hasMega: 0

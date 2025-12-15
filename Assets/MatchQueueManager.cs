@@ -30,14 +30,12 @@ public class MatchQueueManager : MonoBehaviour
 
     public void EnqueueMatch(List<GemMatchEffect> effects, bool isSpecial)
     {
-        if (effects != null && effects.Count > 0)
-        {
-            matchQueue.Enqueue(new MatchItem(effects, isSpecial));
-            if (!isPlaying)
-            {
-                StartCoroutine(PlayQueue());
-            }
-        }
+        if (effects == null || effects.Count == 0) return;
+
+        matchQueue.Enqueue(new MatchItem(effects, isSpecial));
+
+        if (!isPlaying)
+            StartCoroutine(PlayQueue());
     }
 
     private IEnumerator PlayQueue()
@@ -47,13 +45,13 @@ public class MatchQueueManager : MonoBehaviour
         while (matchQueue.Count > 0)
         {
             var item = matchQueue.Dequeue();
-            var effects = item.effects;
-            bool isSpecial = item.isSpecial;
 
-            for (int i = 0; i < effects.Count; i++)
+            ScoreManager.Instance.OnMatch(item.effects.Count);
+
+            for (int i = 0; i < item.effects.Count; i++)
             {
-                bool passSpecial = isSpecial && i == 0;
-                effects[i].PlayMatchEffect(passSpecial);
+                bool passSpecial = item.isSpecial && i == 0;
+                item.effects[i].PlayMatchEffect(passSpecial);
             }
 
             yield return new WaitForSeconds(delayBetweenMatches);
