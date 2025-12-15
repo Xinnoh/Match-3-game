@@ -7,6 +7,8 @@ public class MatchDetector : MonoBehaviour
     Gem gem;
     GridSystem grid;
 
+    [HideInInspector] public bool couldMatch;
+
     void Awake()
     {
         gem = GetComponent<Gem>();
@@ -85,6 +87,9 @@ public class MatchDetector : MonoBehaviour
                 FindOrthogonalMatches(g);
             }
         }
+
+        gem.couldStartMatch = false;
+        TurnManager.Instance.CheckIfTurnOver();
 
         return primaryMatched;
     }

@@ -48,6 +48,7 @@ public class GemFall : MonoBehaviour
     {
         isFalling = true;
         gem.canMatch = false;
+        gem.couldStartMatch = true;
 
         int x = startX;
         int y = startY;

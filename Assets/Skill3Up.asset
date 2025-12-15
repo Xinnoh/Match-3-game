@@ -12,13 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 388e5f747d7b57c438a13b07ac55fc52, type: 3}
   m_Name: Skill3Up
   m_EditorClassIdentifier: 
-  skillName: 4 Up
-  skillDescription: Increases Damage on Match 4
+  skillName: 3 Up
+  skillDescription: Increases Damage on Match 3
   skillType: 2
-  matchType: 4
-  targetType: 6
+  matchType: 0
+  targetType: 0
   sprite: {fileID: 0}
   damageMult: 2
-  m3Proc: 0
-  m4Proc: 1
+  m3Proc: 1
+  m4Proc: 0
   m5Proc: 0

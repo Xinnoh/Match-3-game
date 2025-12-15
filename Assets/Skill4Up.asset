@@ -15,8 +15,8 @@ MonoBehaviour:
   skillName: 4 Up
   skillDescription: Increases Damage on Match 4
   skillType: 2
-  matchType: 4
-  targetType: 6
+  matchType: 0
+  targetType: 0
   sprite: {fileID: 0}
   damageMult: 2
   m3Proc: 0

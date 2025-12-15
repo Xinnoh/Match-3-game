@@ -6,6 +6,7 @@ public class Gem : MonoBehaviour
     public int x, y;
 
     public bool canMatch = true;
+    [HideInInspector] public bool couldStartMatch; // Used to track when to end the turn
     public bool isMatched, isSpecialMatch;
     [HideInInspector] public bool hasNotifiedColumn = false;
     [HideInInspector] public bool toDestroy;
@@ -39,7 +40,7 @@ public class Gem : MonoBehaviour
             sr = spriteTransform.GetComponent<SpriteRenderer>();
         }
 
-        sr.sprite = gemSO.sprite;
+        sr.sprite = gemSOParent.sprite;
         spriteTransform.position = transform.position;
 
         gemMatchEffect = GetComponent<GemMatchEffect>();
