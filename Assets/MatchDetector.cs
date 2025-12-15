@@ -6,12 +6,17 @@ public class MatchDetector : MonoBehaviour
 {
     Gem gem;
     GridSystem grid;
-
+    [HideInInspector] public int attackStat;
     [HideInInspector] public bool couldMatch;
+
+    [HideInInspector] public SkillSO[] skills;
+
 
     void Awake()
     {
         gem = GetComponent<Gem>();
+        
+
         grid = FindFirstObjectByType<GridSystem>();
     }
 
@@ -57,13 +62,13 @@ public class MatchDetector : MonoBehaviour
                     .Select(g => g.GetComponent<GemMatchEffect>())
                     .Where(e => e != null)
                     .ToList();
-                MatchQueueManager.Instance.EnqueueMatch(firstEffects, true);
+                MatchQueueManager.Instance.EnqueueMatch(firstEffects, true, attackStat);
 
                 List<GemMatchEffect> secondEffects = secondMatch
                     .Select(g => g.GetComponent<GemMatchEffect>())
                     .Where(e => e != null)
                     .ToList();
-                MatchQueueManager.Instance.EnqueueMatch(secondEffects, false);
+                MatchQueueManager.Instance.EnqueueMatch(secondEffects, false, attackStat);
             }
             else
             {
@@ -71,7 +76,7 @@ public class MatchDetector : MonoBehaviour
                     .Select(g => g.GetComponent<GemMatchEffect>())
                     .Where(e => e != null)
                     .ToList();
-                MatchQueueManager.Instance.EnqueueMatch(normalEffects, false);
+                MatchQueueManager.Instance.EnqueueMatch(normalEffects, false, attackStat);
             }
 
             // Mark all gems involved for future checks
@@ -92,6 +97,29 @@ public class MatchDetector : MonoBehaviour
         TurnManager.Instance.CheckIfTurnOver();
 
         return primaryMatched;
+    }
+
+    public bool CheckMatchesOnly()
+    {
+        if (gem == null || grid == null || !gem.canMatch || gem.dragging)
+            return false;
+
+        int gx = gem.x;
+        int gy = gem.y;
+
+        Gem thisGem = grid.GetGemAt(gx, gy);
+        if (thisGem == null || thisGem.dragging || thisGem.gemSO == null)
+            return false;
+
+        List<Gem> horizontal = FindLineMatch(thisGem, gx, gy, 1, 0);
+        List<Gem> vertical = FindLineMatch(thisGem, gx, gy, 0, 1);
+
+        List<Gem> result = new List<Gem>();
+
+        if (horizontal.Count >= 3 || vertical.Count >= 3)
+            return true;
+
+        return false;
     }
 
 
@@ -160,7 +188,7 @@ public class MatchDetector : MonoBehaviour
             if (secondaryEffects.Count > 0)
             {
                 // Enqueue the secondary match effects
-                MatchQueueManager.Instance.EnqueueMatch(secondaryEffects, false);
+                MatchQueueManager.Instance.EnqueueMatch(secondaryEffects, false, attackStat);
             }
 
             // RECURSION: Check all newly matched gems for further orthogonal matches

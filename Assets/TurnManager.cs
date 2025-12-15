@@ -11,6 +11,7 @@ public class TurnManager : MonoBehaviour
     public bool CanMove { get; private set; } = true;
     [SerializeField] private TextMeshProUGUI turnStatusText;
 
+    public int turnCount;
 
     void Awake()
     {
@@ -45,6 +46,7 @@ public class TurnManager : MonoBehaviour
         if (AreAllGemsReady(gridSystem) && !CanMove)
         {
             UnlockInput();
+            turnCount++;
         }
     }
 

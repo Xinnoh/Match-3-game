@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class Gem : MonoBehaviour
@@ -18,8 +19,6 @@ public class Gem : MonoBehaviour
     Vector3 startPos;
     private GemMatchEffect gemMatchEffect;
     private GemFall gemFall;
-
-
 
     public void Init(GemSO gemSOParent, int gx, int gy, GridSystem g)
     {
@@ -47,18 +46,16 @@ public class Gem : MonoBehaviour
         gemMatchEffect.sprite = spriteTransform;
         gemFall = GetComponent<GemFall>();
 
+        MatchDetector matchDetector = GetComponent<MatchDetector>();
+        matchDetector.attackStat = gemSOParent.attackStat;
     }
 
     void Update()
     {
-        // Lerp towards position
-        if (!dragging && !gemFall.isFalling)
-            spriteTransform.position = Vector3.Lerp(
-                spriteTransform.position,
-                transform.position,
-                12f * Time.deltaTime
-            );
+        LerpTowardsTransform();
     }
+
+
     void OnMouseDown()
     {
         if (!CanDrag()) return;
@@ -66,6 +63,10 @@ public class Gem : MonoBehaviour
         dragging = true;
         startPos = spriteTransform.position;
         grid.StartDrag(this);
+
+        // Raise sprite above others
+        if (sr != null)
+            sr.sortingOrder = 2;
     }
 
 
@@ -83,7 +84,19 @@ public class Gem : MonoBehaviour
     {
         dragging = false;
         grid.EndDrag();
+
+        StartCoroutine(ResetSortingOrder());
     }
+
+    private IEnumerator ResetSortingOrder()
+    {
+        while ((spriteTransform.position - transform.position).sqrMagnitude > 0.01f)
+            yield return null;
+
+        if (sr != null)
+            sr.sortingOrder = 0;
+    }
+
 
     public void OnDestroy()
     {
@@ -98,4 +111,13 @@ public class Gem : MonoBehaviour
         return TurnManager.Instance.CanMove;
     }
 
+    private void LerpTowardsTransform()
+    {
+        if (!dragging && !gemFall.isFalling)
+            spriteTransform.position = Vector3.Lerp(
+                spriteTransform.position,
+                transform.position,
+                12f * Time.deltaTime
+            );
+    }
 }

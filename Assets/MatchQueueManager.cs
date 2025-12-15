@@ -8,19 +8,24 @@ public class MatchQueueManager : MonoBehaviour
 
     [SerializeField] float delayBetweenMatches = 0.2f;
 
-    /// <summary>
-    /// Stores each match made, and plays them in order after a delay
-    /// </summary>
-
     private class MatchItem
     {
         public List<GemMatchEffect> effects;
         public bool isSpecial;
-        public MatchItem(List<GemMatchEffect> e, bool s) { effects = e; isSpecial = s; }
+        public int attackPower;
+
+        public MatchItem(List<GemMatchEffect> e, bool s, int a)
+        {
+            effects = e;
+            isSpecial = s;
+            attackPower = a;
+        }
     }
 
     private Queue<MatchItem> matchQueue = new Queue<MatchItem>();
     private bool isPlaying = false;
+
+    private int comboCount = 0;
 
     void Awake()
     {
@@ -28,11 +33,11 @@ public class MatchQueueManager : MonoBehaviour
         else Destroy(gameObject);
     }
 
-    public void EnqueueMatch(List<GemMatchEffect> effects, bool isSpecial)
+    public void EnqueueMatch(List<GemMatchEffect> effects, bool isSpecial, int attackPower)
     {
         if (effects == null || effects.Count == 0) return;
 
-        matchQueue.Enqueue(new MatchItem(effects, isSpecial));
+        matchQueue.Enqueue(new MatchItem(effects, isSpecial, attackPower));
 
         if (!isPlaying)
             StartCoroutine(PlayQueue());
@@ -41,12 +46,19 @@ public class MatchQueueManager : MonoBehaviour
     private IEnumerator PlayQueue()
     {
         isPlaying = true;
+        comboCount = 0;
 
         while (matchQueue.Count > 0)
         {
+            comboCount++;
+
             var item = matchQueue.Dequeue();
 
-            ScoreManager.Instance.OnMatch(item.effects.Count);
+            ScoreManager.Instance.OnMatch(
+                item.effects.Count,
+                comboCount,
+                item.attackPower
+            );
 
             for (int i = 0; i < item.effects.Count; i++)
             {
@@ -58,5 +70,10 @@ public class MatchQueueManager : MonoBehaviour
         }
 
         isPlaying = false;
+    }
+
+    public void ResetCombo()
+    {
+        comboCount = 0;
     }
 }

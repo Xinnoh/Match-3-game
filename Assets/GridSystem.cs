@@ -31,6 +31,8 @@ public class GridSystem : MonoBehaviour
 
     private GemSpawner gemSpawner;
 
+    public bool debugCanMoveWithoutMatch;
+
 
     void Start()
     {
@@ -72,36 +74,43 @@ public class GridSystem : MonoBehaviour
         int tx = Mathf.RoundToInt(m.x / cellSize);
         int ty = Mathf.RoundToInt(m.y / cellSize);
 
-        // If target is out of bounds, or box null, or same as original, snap back
-        if ((!InBounds(tx, ty) || boxes[tx, ty] == null)
-            || (tx == dragging.x && ty == dragging.y))
+        if (!InBounds(tx, ty) || boxes[tx, ty] == null || (tx == dragging.x && ty == dragging.y))
         {
             SnapBack();
             return;
         }
 
+        int ox = dragging.x;
+        int oy = dragging.y;
+
         Gem targetLocation = grid[tx, ty];
 
-        // Do not swap if target is currently matching
         if (targetLocation == null || !targetLocation.isMatched)
         {
             SwapToBox(dragging, tx, ty);
             swapped = true;
 
+            bool matchA = dragging.GetComponent<MatchDetector>().CheckMatchesOnly();
+            bool matchB = false;
+
             if (targetLocation != null)
+                matchB = targetLocation.GetComponent<MatchDetector>().CheckMatchesOnly();
+
+            // If a match was formed on either side, swap
+            if (!TurnManager.Instance.timeAttack && !matchA && !matchB)
             {
-                dragging.GetComponent<MatchDetector>().GetMatches();
-                targetLocation.GetComponent<MatchDetector>().GetMatches();
-            }
-            else
-            {
-                dragging.GetComponent<MatchDetector>().GetMatches();
+                SwapToBox(dragging, ox, oy);
+                SnapBack();
+                dragging = null;
+                return;
             }
 
+            dragging.GetComponent<MatchDetector>().GetMatches();
+            if (targetLocation != null)
+                targetLocation.GetComponent<MatchDetector>().GetMatches();
+
             if (!TurnManager.Instance.timeAttack)
-            {
                 TurnManager.Instance.LockInput();
-            }
         }
 
         if (!swapped)
@@ -109,6 +118,7 @@ public class GridSystem : MonoBehaviour
 
         dragging = null;
     }
+
 
     // Helper function to snap gem back to original box
     private void SnapBack()
