@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -20,7 +21,9 @@ public class Gem : MonoBehaviour
     private GemMatchEffect gemMatchEffect;
     private GemFall gemFall;
 
-    public void Init(GemSO gemSOParent, int gx, int gy, GridSystem g)
+    [SerializeField] float fadeInDuration = 0.25f;
+
+    public void Init(GemSO gemSOParent, int gx, int gy, GridSystem g, bool fadeIn)
     {
         gemSO = gemSOParent;
         x = gx;
@@ -48,6 +51,11 @@ public class Gem : MonoBehaviour
 
         MatchDetector matchDetector = GetComponent<MatchDetector>();
         matchDetector.attackStat = gemSOParent.attackStat;
+
+        
+
+        if (fadeIn)
+            StartCoroutine(FadeIn());
     }
 
     void Update()
@@ -119,5 +127,25 @@ public class Gem : MonoBehaviour
                 transform.position,
                 12f * Time.deltaTime
             );
+    }
+
+    // Fade in effect when spawned at top
+    private IEnumerator FadeIn()
+    {
+        Color c = sr.color;
+        c.a = 0f;
+        sr.color = c;
+
+        float t = 0f;
+        while (t < fadeInDuration)
+        {
+            t += Time.deltaTime;
+            c.a = Mathf.Clamp01(t / fadeInDuration);
+            sr.color = c;
+            yield return null;
+        }
+
+        c.a = 1f;
+        sr.color = c;
     }
 }

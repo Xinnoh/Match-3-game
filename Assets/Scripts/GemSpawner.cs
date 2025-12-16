@@ -44,7 +44,7 @@ public class GemSpawner : MonoBehaviour
 
         GemSO so = gridSystem.gemTypes[Random.Range(0, gridSystem.gemTypes.Count)];
 
-        gem.Init(so, x, y, gridSystem);
+        gem.Init(so, x, y, gridSystem, true);
 
         // Update both representations
         gridSystem.Grid[x, y] = gem;

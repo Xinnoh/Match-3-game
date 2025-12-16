@@ -24,9 +24,12 @@ public class ScoreManager : MonoBehaviour
         float matchMultiplier = GetMultiplier(matchLength);
         float comboMultiplier = GetComboMultiplier(combo);
 
+        int totalAttack = Mathf.RoundToInt(matchMultiplier * comboMultiplier * attackPower);
 
-        score += Mathf.RoundToInt(matchMultiplier * comboMultiplier * attackPower);
+        score += totalAttack;
         UpdateUI();
+
+        EnemyManager.Instance.TakeDamage(totalAttack);
     }
 
     float GetMultiplier(int matchLength)

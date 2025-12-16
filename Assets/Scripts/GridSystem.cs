@@ -261,7 +261,7 @@ public class GridSystem : MonoBehaviour
             {
                 gem = Instantiate(gemPrefab, boxes[x, y].transform.position, Quaternion.identity, transform);
             }
-            gem.Init(so, x, y, this);
+            gem.Init(so, x, y, this, false);
             attempts++;
 
             if (attempts > 10)
