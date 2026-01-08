@@ -20,6 +20,7 @@ public class EnemyManager : MonoBehaviour
 
     public EnemySO enemySO;
 
+    public bool isDefeated = false;
 
     void Awake()
     {
@@ -43,6 +44,10 @@ public class EnemyManager : MonoBehaviour
 
     public void Die()
     {
+        if(isDefeated) return;
+
+        isDefeated = true;
+
         Debug.Log("Enemy has died.");
         // Placeholder for death logic
     }

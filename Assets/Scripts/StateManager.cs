@@ -15,4 +15,25 @@ public class StateManager : MonoBehaviour
     {
         
     }
+
+    /*
+     * States I want:
+     * 
+     * Start on menu
+     * 
+     * Start combat
+     * 
+     * Combat end
+     *      Logic to detect win/loss
+     * 
+     * Select an upgrade
+     *      Shop
+     *          Skills
+     * 
+     * New combat, loop
+     * 
+
+    */
+
+
 }

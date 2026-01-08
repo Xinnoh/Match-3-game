@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using UnityEngine;
 using System.Linq; 
+using UnityEngine;
 
 public class MatchDetector : MonoBehaviour
 {
@@ -38,11 +38,15 @@ public class MatchDetector : MonoBehaviour
             return new List<Gem>();
 
         // --- 1. Find Primary Match ---
-        List<Gem> horizontal = FindLineMatch(thisGem, gx, gy, 1, 0);
-        List<Gem> vertical = FindLineMatch(thisGem, gx, gy, 0, 1);
+        bool hCenter, vCenter;
+        List<Gem> horizontal = FindLineMatch(thisGem, gx, gy, 1, 0, out hCenter);
+        List<Gem> vertical = FindLineMatch(thisGem, gx, gy, 0, 1, out vCenter);
 
         List<Gem> primaryMatched = new List<Gem>();
         bool isSpecialMatch = horizontal.Count >= 3 && vertical.Count >= 3;
+
+
+
 
         if (horizontal.Count >= 3)
             primaryMatched.AddRange(horizontal);
@@ -57,7 +61,21 @@ public class MatchDetector : MonoBehaviour
                 List<Gem> firstMatch = (horizontal.Count >= vertical.Count) ? horizontal : vertical;
                 List<Gem> secondMatch = (horizontal.Count >= vertical.Count) ? vertical : horizontal;
 
-                // Convert gems to effects before queuing
+
+                // Match type check
+                bool isCross = hCenter && vCenter;
+                bool isT = hCenter ^ vCenter;
+                bool isL = !hCenter && !vCenter;
+
+                int largest = Mathf.Max(horizontal.Count, vertical.Count);
+
+                if (isCross) Debug.Log($"Cross Match | Size: {largest}");
+                else if (isT) Debug.Log($"T Match | Size: {largest}");
+                else if (isL) Debug.Log($"L Match | Size: {largest}");
+
+
+
+                // Queues the larger match first, then the smaller one
                 List<GemMatchEffect> firstEffects = firstMatch
                     .Select(g => g.GetComponent<GemMatchEffect>())
                     .Where(e => e != null)
@@ -69,6 +87,13 @@ public class MatchDetector : MonoBehaviour
                     .Where(e => e != null)
                     .ToList();
                 MatchQueueManager.Instance.EnqueueMatch(secondEffects, false, attackStat);
+
+                // If this was the dragged gem, add a damage multiplier
+                if (thisGem.dragging)
+                {
+                    // Code goes here
+                }
+
             }
             else
             {
@@ -98,7 +123,7 @@ public class MatchDetector : MonoBehaviour
 
         return primaryMatched;
     }
-
+        
     public bool CheckMatchesOnly()
     {
         if (gem == null || grid == null || !gem.canMatch || gem.dragging)
@@ -111,8 +136,9 @@ public class MatchDetector : MonoBehaviour
         if (thisGem == null || thisGem.dragging || thisGem.gemSO == null)
             return false;
 
-        List<Gem> horizontal = FindLineMatch(thisGem, gx, gy, 1, 0);
-        List<Gem> vertical = FindLineMatch(thisGem, gx, gy, 0, 1);
+        bool _;
+        List<Gem> horizontal = FindLineMatch(thisGem, gx, gy, 1, 0, out _);
+        List<Gem> vertical = FindLineMatch(thisGem, gx, gy, 0, 1, out _);
 
         List<Gem> result = new List<Gem>();
 
@@ -140,15 +166,14 @@ public class MatchDetector : MonoBehaviour
         // we check both directions again.
 
         // Check Horizontal match 
-        List<Gem> horizontal = FindLineMatch(g, gx, gy, 1, 0);
-
-        // Check Vertical match
-        List<Gem> vertical = FindLineMatch(g, gx, gy, 0, 1);
+        bool _;
+        List<Gem> horizontal = FindLineMatch(g, gx, gy, 1, 0, out _);
+        List<Gem> vertical = FindLineMatch(g, gx, gy, 0, 1, out _);
 
         List<Gem> orthogonalMatched = new List<Gem>();
 
-        // IMPORTANT: We only care about secondary matches that are 3+ long AND 
-        // that are *different* from the primary match direction.
+        // IMPORTANT: We only care about secondary matches that 
+        // are *different* from the primary match direction.
         // Since primaryMatched already covered the T/L case centered on thisGem, 
         // this check is for secondary T/L/Cross matches centered on other gems.
 
@@ -201,53 +226,48 @@ public class MatchDetector : MonoBehaviour
         }
     }
 
-
-    private List<Gem> FindLineMatch(Gem centerGem, int gx, int gy, int dx, int dy)
+    // replace FindLineMatch signature and body
+    private List<Gem> FindLineMatch(Gem centerGem, int gx, int gy, int dx, int dy, out bool centerMatch)
     {
         List<Gem> line = new List<Gem> { centerGem };
 
-        // Check in the negative direction (e.g., left or down)
+        bool foundNeg = false;
+        bool foundPos = false;
+
         for (int i = 1; ; i++)
         {
             int x = gx - i * dx;
             int y = gy - i * dy;
 
-            // Grid boundary check
-            if (!grid.InBounds(x, y))
-                break;
+            if (!grid.InBounds(x, y)) break;
 
             Gem g = grid.GetGemAt(x, y);
             if (g != null && g.gemSO == centerGem.gemSO && g.canMatch)
             {
                 line.Add(g);
+                foundNeg = true;
             }
-            else
-            {
-                break;
-            }
+            else break;
         }
 
-        // Check in the positive direction (e.g., right or up)
         for (int i = 1; ; i++)
         {
             int x = gx + i * dx;
             int y = gy + i * dy;
 
-            // Grid boundary check
-            if (!grid.InBounds(x, y))
-                break;
+            if (!grid.InBounds(x, y)) break;
 
             Gem g = grid.GetGemAt(x, y);
             if (g != null && g.gemSO == centerGem.gemSO && g.canMatch)
             {
                 line.Add(g);
+                foundPos = true;
             }
-            else
-            {
-                break;
-            }
+            else break;
         }
 
+        centerMatch = foundNeg && foundPos;
         return line;
     }
+
 }
